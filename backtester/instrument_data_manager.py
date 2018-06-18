@@ -7,6 +7,8 @@ from backtester.instrumentUpdates.instrument_data import InstrumentData
 
 class InstrumentDataManager(object):
     '''
+    * Reads, saves and stores instrument's feature data in chunks
+    * Transforms instruments data by feature to instruments data by instrumentId   
     '''
     def __init__(self, dataParser, features, instrumentIds, featureFolderName='features', lookbackSize=None):
         self.__cachedFolderName = dataParser._cachedFolderName

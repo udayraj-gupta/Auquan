@@ -1,6 +1,5 @@
 from itertools import chain
 import pandas as pd
-import time
 from backtester.features.feature_config import FeatureConfig
 from backtester.instrument_data_manager import InstrumentDataManager
 from backtester.constants import *
@@ -9,6 +8,7 @@ from backtester.logger import *
 
 class FeatureManager(object):
     """
+    Computes features of the instruments using InstrumentDataManager
     """
     def __init__(self, systemParams, dataParser, chunkSize):
         self.systemParams = systemParams
@@ -18,15 +18,10 @@ class FeatureManager(object):
         instrumentFeatureConfigs = systemParams.getFeatureConfigsForInstrumentType(INSTRUMENT_TYPE_STOCK)
         instrumentFeatureKeys = map(lambda x: x.getFeatureKey(), instrumentFeatureConfigs)
         featureKeys = list(chain(self.__bookDataFeatures, instrumentFeatureKeys))
-        maxPeriod = self.parseFeatureConfigs(instrumentFeatureConfigs)
+        maxPeriod = self.getMaxPeriodFromFeatureConfigDicts(instrumentFeatureConfigs)
         self.__instrumentDataManger = InstrumentDataManager(dataParser, featureKeys, systemParams.instrumentIds, lookbackSize=maxPeriod)
 
-        self.__totalIter = 0
-        self.__perfDict = {}
-        for featureKey in featureKeys:
-            self.__perfDict[featureKey] = 0
-
-    def getSystemParamas(self):
+    def getSystemParams(self):
         return self.systemParams
 
     def getInstrumentDf(self, instrumentId, useFile=True, chunkSize=None):
@@ -35,7 +30,7 @@ class FeatureManager(object):
     def getFeatureDf(self, featureKey):
         return self.__instrumentDataManger.getInstrumentDataChunkByFeature(featureKey)
 
-    def parseFeatureConfigs(self, featureConfigList):
+    def getMaxPeriodFromFeatureConfigDicts(self, featureConfigList):
         maxPeriod = 0
         for featureConfig in featureConfigList:
             featureParams = featureConfig.getFeatureParams()
@@ -61,7 +56,6 @@ class FeatureManager(object):
             for bookDataFeature in self.__bookDataFeatures:
                 self.__instrumentDataManger.updateInstrumentDataChunk(bookDataFeature)
             for featureConfig in featureConfigs:
-                start = time.time()
                 featureKey = featureConfig.getFeatureKey()
                 featureParams = featureConfig.getFeatureParams()
                 featureId = featureConfig.getFeatureId()
@@ -71,10 +65,6 @@ class FeatureManager(object):
                                                                 featureKey=featureKey,
                                                                 featureManager=self)
                 self.__instrumentDataManger.addFeatureValueChunkForAllInstruments(featureKey, featureDf)
-                end = time.time()
-                diffms = (end - start) * 1000
-                self.__perfDict[featureKey] = self.__perfDict[featureKey] + diffms
-                logPerf('Avg time for feature: %s : %.2f' % (featureKey, self.__perfDict[featureKey] / self.__totalIter))
             self.__instrumentDataManger.transformInstrumentData()
             if writeFeatures:
                 self.__instrumentDataManger.writeInstrumentData()

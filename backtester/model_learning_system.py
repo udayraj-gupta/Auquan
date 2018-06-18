@@ -44,7 +44,6 @@ if __name__ == '__main__':
                                      endDateStr=endDateStr,
                                      event='history',
                                      liveUpdates=False)
-    # print(mlsParams.trainingDataSource.emitAllInstrumentUpdates()['IBM'].getBookData())
 
     system1 = ModelLearningSystem(mlsParams, chunkSize=1000)
     system1.generateFeatures()

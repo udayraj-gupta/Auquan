@@ -33,7 +33,6 @@ class InstrumentData(object):
         return self.__bookDataSize
 
     def setBookData(self, data):
-        # del self.__bookData
         self.__bookData = data
         self.__bookDataSize = len(self.__bookData)
 
